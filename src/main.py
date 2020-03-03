@@ -68,7 +68,7 @@ class PlotWindow(QtWidgets.QMainWindow):
     # and spectral plot
     def display_fig(self):
         # Display image
-        img_name = '../figures/' + config.names[self.predicted_class - 1] + '.jpg'
+        img_name = '../figures/' + config.names[self.predicted_class - 1] + '.png'
 
         self.lblImage.setPixmap(QtGui.QPixmap(img_name))
         self.lblImage.show()
