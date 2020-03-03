@@ -7,8 +7,8 @@ import sys
 
 class Netio (threading.Thread):
 
-    def __init__(self): #, name, counter):
-        threading.Thread.__init__(self)
+	def __init__(self): #, name, counter):
+		threading.Thread.__init__(self)
 		# self.threadID = threadID
 		self.ip = '192.168.20.109'
 		self.plugToToggle = 0
@@ -107,4 +107,3 @@ class Netio (threading.Thread):
 
 	def getName(self):
 		return self.menu["name"]
-
