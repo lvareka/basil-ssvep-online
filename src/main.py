@@ -109,8 +109,8 @@ class PlotWindow(QtWidgets.QMainWindow):
 
         self.pbStart.setEnabled((not self.collect_worker.running) & marker_status & eeg_status
                                 & (not self.collect_worker.terminated))
-        self.sbChannelID.setEnabled((not self.collect_worker.running) & marker_status & eeg_status
-                                    & (not self.collect_worker.terminated))
+        self.sbChannelID.setEnabled((not self.collect_worker.running) & (not self.collect_worker.terminated) & (not self.cbAllChannels.isChecked()))
+        self.cbAllChannels.setEnabled((not self.collect_worker.running) & (not self.collect_worker.terminated))
         self.pbStop.setEnabled(self.collect_worker.running)
 
         if self.time_out > 0:
@@ -132,6 +132,7 @@ class PlotWindow(QtWidgets.QMainWindow):
     # Start collecting and evaluating data
     def run(self):
         self.collect_worker.eeg_processor.channel_id = self.sbChannelID.value()
+        self.collect_worker.eeg_processor.all_channels = self.cbAllChannels.isChecked()
         self.collect_worker.start()
         self.teStatus.append('Running..')
 
