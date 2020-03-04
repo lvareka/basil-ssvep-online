@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>mainWindow</class>
- <widget class="QMainWindow" name="mainWindow">
+ <class>pbCorrect</class>
+ <widget class="QMainWindow" name="pbCorrect">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>1085</width>
-    <height>838</height>
+    <height>840</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -53,57 +53,11 @@
      <string>Classifier confidence:</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pbStart">
-    <property name="enabled">
-     <bool>false</bool>
-    </property>
-    <property name="geometry">
-     <rect>
-      <x>870</x>
-      <y>720</y>
-      <width>75</width>
-      <height>51</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>10</pointsize>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
-    <property name="text">
-     <string>Start</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pbStop">
-    <property name="enabled">
-     <bool>false</bool>
-    </property>
-    <property name="geometry">
-     <rect>
-      <x>960</x>
-      <y>720</y>
-      <width>75</width>
-      <height>51</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>10</pointsize>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
-    <property name="text">
-     <string>Stop</string>
-    </property>
-   </widget>
    <widget class="QLabel" name="lblEEG">
     <property name="geometry">
      <rect>
       <x>880</x>
-      <y>630</y>
+      <y>580</y>
       <width>101</width>
       <height>16</height>
      </rect>
@@ -116,7 +70,7 @@
     <property name="geometry">
      <rect>
       <x>880</x>
-      <y>650</y>
+      <y>600</y>
       <width>111</width>
       <height>16</height>
      </rect>
@@ -129,7 +83,7 @@
     <property name="geometry">
      <rect>
       <x>980</x>
-      <y>630</y>
+      <y>580</y>
       <width>47</width>
       <height>13</height>
      </rect>
@@ -152,7 +106,7 @@
     <property name="geometry">
      <rect>
       <x>980</x>
-      <y>650</y>
+      <y>600</y>
       <width>47</width>
       <height>13</height>
      </rect>
@@ -175,9 +129,9 @@
     <property name="geometry">
      <rect>
       <x>860</x>
-      <y>600</y>
+      <y>560</y>
       <width>191</width>
-      <height>80</height>
+      <height>71</height>
      </rect>
     </property>
     <property name="title">
@@ -303,6 +257,118 @@
     <property name="checked">
      <bool>true</bool>
     </property>
+   </widget>
+   <widget class="QGroupBox" name="gbAppControl">
+    <property name="geometry">
+     <rect>
+      <x>860</x>
+      <y>640</y>
+      <width>191</width>
+      <height>81</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>Control</string>
+    </property>
+    <widget class="QPushButton" name="pbStart">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>20</y>
+       <width>75</width>
+       <height>51</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Start</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pbStop">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>100</x>
+       <y>20</y>
+       <width>75</width>
+       <height>51</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Stop</string>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QGroupBox" name="gbFeedback">
+    <property name="geometry">
+     <rect>
+      <x>860</x>
+      <y>730</y>
+      <width>191</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>Optional feedback</string>
+    </property>
+    <widget class="QPushButton" name="pbTrue">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>20</y>
+       <width>75</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>True</string>
+     </property>
+     <property name="icon">
+      <iconset>
+       <normaloff>correct.png</normaloff>correct.png</iconset>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pbFalse">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>100</x>
+       <y>20</y>
+       <width>75</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>False</string>
+     </property>
+     <property name="icon">
+      <iconset>
+       <normaloff>wrong.png</normaloff>wrong.png</iconset>
+     </property>
+    </widget>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">

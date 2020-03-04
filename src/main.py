@@ -21,8 +21,11 @@ class PlotWindow(QtWidgets.QMainWindow):
         self.result = None
         self.freqs = None
         self.amplitudes = None
+        self.confidence = 0
         self.pbStart.pressed.connect(self.run)
         self.pbStop.pressed.connect(self.stop)
+        # self.pbTrue.pressed.connect(self.teStatus.append('True'))
+        # self.pbFalse.pressed.connect(self.teStatus.append('False'))
         self.collect_worker = collect_lsl_all.AllDataCollector()
         self.statusBar = QStatusBar()
         self.setStatusBar(self.statusBar)
@@ -32,6 +35,8 @@ class PlotWindow(QtWidgets.QMainWindow):
 
         self.collect_worker.marker_collector.add_status_signal.connect(self.statusBar.showMessage)
         self.collect_worker.marker_collector.send_timeout_signal.connect(self.set_timeout_value)
+        self.collect_worker.marker_collector.set_feedback_status.connect(self.pbTrue.setEnabled)
+        self.collect_worker.marker_collector.set_feedback_status.connect(self.pbFalse.setEnabled)
 
         self.timer = QtCore.QTimer(self)
         self.timer.timeout.connect(self.update_status)
@@ -42,11 +47,12 @@ class PlotWindow(QtWidgets.QMainWindow):
         self.lblImage.show()
 
     # Received results from signal processor -> update the state
-    def set_results(self, predicted_class, result, freqs, amplitudes):
+    def set_results(self, predicted_class, result, freqs, amplitudes, confidence):
         self.predicted_class = predicted_class
         self.result = result
         self.freqs = freqs
         self.amplitudes = amplitudes
+        self.confidence = confidence
         self.status_output()
         self.display_fig()
 
@@ -56,13 +62,13 @@ class PlotWindow(QtWidgets.QMainWindow):
     # Print status (typically classification results)
     def status_output(self):
         # Print the predicted class label
-        self.teStatus.append('Predicted class: ' + str(self.predicted_class))
+        self.teStatus.append('Classification result: ' + str(self.result))
         self.teStatus.append('Predicted class name: ' + str(config.names[self.predicted_class - 1]))
-        self.teStatus.append('Result: ' + str(self.result))
 
-        self.result.sort()
-        confidence = 100 * (self.result[2] - self.result[1])
-        self.pbConfidence.setValue(confidence)
+        # self.result.sort()
+        # confidence = 100 * (self.result[2] - self.result[1])
+
+        self.pbConfidence.setValue(self.confidence * 100)
 
     # Display figure (corresponding to the action taken)
     # and spectral plot

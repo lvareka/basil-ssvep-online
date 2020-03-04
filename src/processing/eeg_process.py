@@ -10,12 +10,15 @@ import src.data.config as config
 # Inspired by: https://github.com/aaravindravi/PythonBox_OpenViBE_SSVEP_CCA
 # Lukas Vareka, 2020
 class EEGProcessor(QtCore.QObject):
-    set_results_signal = pyqtSignal(object, object, object, object)
+    set_results_signal = pyqtSignal(object, object, object, object, object)
     add_status_signal  = pyqtSignal(str)
     channel_id = 0
     all_channels = True
     all_spectral_result = []
     all_spectral_diff_result = []
+    predicted_classes = []
+    predicted_classes_weights = []
+
 
     def __init__(self):
         super(EEGProcessor, self).__init__()
@@ -55,35 +58,40 @@ class EEGProcessor(QtCore.QObject):
     # Compute spectral energies
     # in the neighborhood of target frequencies
     def evaluate_spectral(self, freqs, ps):
-        delta = 0.3
+
         energy = [0, 0, 0]
         for i in range(0, len(freqs)):
             for j in range(0, len(config.frequencies)):
-                if  abs(config.frequencies[j] - freqs[i]) < delta:
+                if  abs(config.frequencies[j] - freqs[i]) < config.fq_interval:
                     energy[j] = energy[j] + ps[i] * ps[i]
         if max(energy) != 0:
             energy = energy / max(energy)
+
+        self.predicted_classes.append(np.argmax(energy) + 1)
+        self.predicted_classes_weights.append(config.weights_classifier['spectral'])
         return energy
 
     # Compute spectral differences
     # between close and more distant neighborhood
     # of target frequencies
     def evaluate_spectral_diffs(self, freqs, ps):
-        delta1 = 0.3
-        delta2 = 1
+
         energy = [0, 0, 0]
         baseline = [0, 0, 0]
         for i in range(0, len(freqs)):
             for j in range(0, len(config.frequencies)):
-                if abs(config.frequencies[j] - freqs[i]) < delta1:
+                if abs(config.frequencies[j] - freqs[i]) < config.fq_interval:
                     energy[j] = energy[j] + ps[i] * ps[i]
-                if abs(config.frequencies[j] - freqs[i]) < delta2 and abs(config.frequencies[j] - freqs[i]) > delta1:
+                if abs(config.frequencies[j] - freqs[i]) < config.fq_baseline and abs(config.frequencies[j] - freqs[i]) > config.fq_interval:
                     baseline[j] = baseline[j] + ps[i] * ps[i]
         for i in range(0, len(energy)):
             energy[i] = energy[i] / baseline[i]
         if max(energy) != 0:
             energy = energy / max(energy)
         self.add_status_signal.emit('Spectral energy diff: ' + str(energy))
+
+        self.predicted_classes.append(np.argmax(energy) + 1)
+        self.predicted_classes_weights.append(config.weights_classifier['spectral_diff'])
         return energy
 
     # Compute CCA-related metrics
@@ -102,6 +110,9 @@ class EEGProcessor(QtCore.QObject):
         # Compute CCA
         cca_result = self.find_corr(n_components, eeg_data, freq)
         self.add_status_signal.emit('CCA results: ' + str(cca_result))
+
+        self.predicted_classes.append(np.argmax(cca_result) + 1)
+        self.predicted_classes_weights.append(config.weights_classifier['cca'])
         return cca_result
 
     def calc_psd (self, eeg_signal):
@@ -127,18 +138,21 @@ class EEGProcessor(QtCore.QObject):
     # computed weighted mean of these metrics
     # and pass the results to the GUI
     def process(self, eeg_data, s_rate):
+        self.predicted_classes = []
+        self.predicted_classes_weights = []
         self.s_rate = s_rate
         # print('EEG data: ', eeg_data)
         eeg_shape = np.shape(eeg_data)
-        self.add_status_signal.emit('Received new EEG data package: ')
-        self.add_status_signal.emit('Size: ' + str(eeg_shape))
+        self.add_status_signal.emit('Received new EEG data package: size: ' + str(eeg_shape))
         self.add_status_signal.emit('Sampling rate: ' + str(s_rate))
 
         if s_rate == 0:
             return
 
+        # all individual EEG channel results to average later
         self.all_spectral_result = []
         self.all_spectral_diff_result = []
+
         # frequency spectrum
         if self.all_channels:
 
@@ -170,9 +184,18 @@ class EEGProcessor(QtCore.QObject):
         cca_result = self.evaluate_corr(eeg_data)
 
         # give one overall result (weighting various results)
-        result = spectral_result * 0.1 + spectral_diff_result * 0.6 + cca_result * 0.3
+        result = spectral_result * config.weights_classifier['spectral'] + spectral_diff_result * \
+                 config.weights_classifier['spectral_diff'] + cca_result * config.weights_classifier['cca']
 
         # Find the maximum canonical correlation coefficient and corresponding class for the given SSVEP/EEG data
         predicted_class = np.argmax(result) + 1
 
-        self.set_results_signal.emit(predicted_class, result, freq_s, ps)
+        # Percentage of same voting of various methods
+        confidence = 0
+
+        for i in range(0, len(self.predicted_classes)):
+            if predicted_class == self.predicted_classes[i]:
+                confidence = confidence + self.predicted_classes_weights[i]
+        confidence = confidence / np.sum(self.predicted_classes_weights)
+
+        self.set_results_signal.emit(predicted_class, result, freq_s, ps, confidence)
