@@ -62,7 +62,7 @@ for i in range(1, 7):
             imageStim1.draw()
         if frameN % 4 <= 1: # 15 Hz
             imageStim2.draw()
-        if frameN % 3 == 0: # 20 Hz
+        if frameN % 6 <= 2: # 10 Hz
             imageStim3.draw()
        # else:
        #     emptyStim.draw()

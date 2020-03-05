@@ -5,7 +5,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import src.data.collect_lsl_all as collect_lsl_all
 import src.data.config as config
-
+from functools import partial
 
 # Main GUI for BASIL SSVEP
 # Lukas Vareka, 2020
@@ -24,8 +24,8 @@ class PlotWindow(QtWidgets.QMainWindow):
         self.confidence = 0
         self.pbStart.pressed.connect(self.run)
         self.pbStop.pressed.connect(self.stop)
-        # self.pbTrue.pressed.connect(self.teStatus.append('True'))
-        # self.pbFalse.pressed.connect(self.teStatus.append('False'))
+        self.pbTrue.pressed.connect(partial(self.teStatus.append,  'Correctly detected'))
+        self.pbFalse.pressed.connect(partial(self.teStatus.append, 'Incorrectly detected'))
         self.collect_worker = collect_lsl_all.AllDataCollector()
         self.statusBar = QStatusBar()
         self.setStatusBar(self.statusBar)
@@ -65,10 +65,12 @@ class PlotWindow(QtWidgets.QMainWindow):
         self.teStatus.append('Classification result: ' + str(self.result))
         self.teStatus.append('Predicted class name: ' + str(config.names[self.predicted_class - 1]))
 
-        # self.result.sort()
-        # confidence = 100 * (self.result[2] - self.result[1])
+        # Clearly different values in results array?
+        self.result.sort()
+        confidence2 = 100 * (self.result[2] - self.result[1])
 
-        self.pbConfidence.setValue(self.confidence * 100)
+        # Average different confidence values
+        self.pbConfidence.setValue((confidence2 + self.confidence * 100) / 2.0)
 
     # Display figure (corresponding to the action taken)
     # and spectral plot

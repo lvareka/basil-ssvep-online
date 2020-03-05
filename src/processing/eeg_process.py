@@ -19,7 +19,6 @@ class EEGProcessor(QtCore.QObject):
     predicted_classes = []
     predicted_classes_weights = []
 
-
     def __init__(self):
         super(EEGProcessor, self).__init__()
         self.s_rate = 0
@@ -85,10 +84,13 @@ class EEGProcessor(QtCore.QObject):
                 if abs(config.frequencies[j] - freqs[i]) < config.fq_baseline and abs(config.frequencies[j] - freqs[i]) > config.fq_interval:
                     baseline[j] = baseline[j] + ps[i] * ps[i]
         for i in range(0, len(energy)):
-            energy[i] = energy[i] / baseline[i]
+            if baseline[i] == 0:
+                energy[i] = 0
+            else:
+                energy[i] = energy[i] / baseline[i]
         if max(energy) != 0:
             energy = energy / max(energy)
-        self.add_status_signal.emit('Spectral energy diff: ' + str(energy))
+        # self.add_status_signal.emit('Spectral energy diff: ' + str(energy))
 
         self.predicted_classes.append(np.argmax(energy) + 1)
         self.predicted_classes_weights.append(config.weights_classifier['spectral_diff'])
@@ -143,7 +145,7 @@ class EEGProcessor(QtCore.QObject):
         self.s_rate = s_rate
         # print('EEG data: ', eeg_data)
         eeg_shape = np.shape(eeg_data)
-        self.add_status_signal.emit('Received new EEG data package: size: ' + str(eeg_shape))
+        self.add_status_signal.emit('\nReceived new EEG data package: size: ' + str(eeg_shape))
         self.add_status_signal.emit('Sampling rate: ' + str(s_rate))
 
         if s_rate == 0:

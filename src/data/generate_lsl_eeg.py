@@ -19,7 +19,7 @@ outlet = StreamOutlet(info)
 print("now sending data...")
 length = 2794
 
-target_freq = 12.2
+target_freq = 14.9
 t = np.arange(0, (length / s_rate), step=1.0 / s_rate)
 # First harmonics/Fundamental freqeuncy
 harmonic_signal = np.sin(np.pi * 2 * target_freq * t)
