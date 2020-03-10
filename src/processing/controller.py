@@ -8,16 +8,16 @@ import src.data.config as config
 # Ensures collecting both EEG and marker data
 # using a separate threads
 # Lukas Vareka, 2020
-class AllDataCollector(QtCore.QThread):
+class Controller(QtCore.QThread):
 
     # reference towards a window
     def __init__(self):
-        super(AllDataCollector, self).__init__()
+        super(Controller, self).__init__()
 
         # Connects marker collector with EEG data source and processor
         self.eeg_collector = colect_lsl_eeg.CollectLslEeg()
         self.eeg_processor = src.processing.eeg_process.EEGProcessor()
-        self.marker_collector = collect_lsl_markers.CollectLslMarkers(self.eeg_collector, self.eeg_processor)
+        self.marker_collector = collect_lsl_markers.CollectLslMarkers(self, self.eeg_collector, self.eeg_processor)
         self.running = False
         self.terminated = False
 

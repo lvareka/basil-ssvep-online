@@ -3,9 +3,10 @@ from PyQt5.QtWidgets import QApplication, QStatusBar
 import sys
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-import src.data.collect_lsl_all as collect_lsl_all
+import src.processing.controller as controller
 import src.data.config as config
 from functools import partial
+
 
 # Main GUI for BASIL SSVEP
 # Lukas Vareka, 2020
@@ -26,17 +27,9 @@ class PlotWindow(QtWidgets.QMainWindow):
         self.pbStop.pressed.connect(self.stop)
         self.pbTrue.pressed.connect(partial(self.teStatus.append,  'Correctly detected'))
         self.pbFalse.pressed.connect(partial(self.teStatus.append, 'Incorrectly detected'))
-        self.collect_worker = collect_lsl_all.AllDataCollector()
         self.statusBar = QStatusBar()
         self.setStatusBar(self.statusBar)
-
-        self.collect_worker.eeg_processor.set_results_signal.connect(self.set_results)
-        self.collect_worker.eeg_processor.add_status_signal.connect(self.teStatus.append)
-
-        self.collect_worker.marker_collector.add_status_signal.connect(self.statusBar.showMessage)
-        self.collect_worker.marker_collector.send_timeout_signal.connect(self.set_timeout_value)
-        self.collect_worker.marker_collector.set_feedback_status.connect(self.pbTrue.setEnabled)
-        self.collect_worker.marker_collector.set_feedback_status.connect(self.pbFalse.setEnabled)
+        self.controller = None
 
         self.timer = QtCore.QTimer(self)
         self.timer.timeout.connect(self.update_status)
@@ -45,6 +38,17 @@ class PlotWindow(QtWidgets.QMainWindow):
 
         self.lblImage.setPixmap(QtGui.QPixmap('../figures/unknown.jpg'))
         self.lblImage.show()
+
+    def setup(self):
+        self.controller = controller.Controller()
+
+        self.controller.eeg_processor.set_results_signal.connect(self.set_results)
+        self.controller.eeg_processor.add_status_signal.connect(self.teStatus.append)
+
+        self.controller.marker_collector.add_status_signal.connect(self.statusBar.showMessage)
+        self.controller.marker_collector.send_timeout_signal.connect(self.set_timeout_value)
+        self.controller.marker_collector.set_feedback_status.connect(self.pbTrue.setEnabled)
+        self.controller.marker_collector.set_feedback_status.connect(self.pbFalse.setEnabled)
 
     # Received results from signal processor -> update the state
     def set_results(self, predicted_class, result, freqs, amplitudes, confidence):
@@ -105,28 +109,29 @@ class PlotWindow(QtWidgets.QMainWindow):
     # Check LSL EEG and marker state
     # and update the GUI accordingly
     def update_status(self):
-        eeg_status, marker_status = collect_lsl_all.AllDataCollector.check_lsl()
+        eeg_status, marker_status = controller.Controller.check_lsl()
+
         self.switch_lsl_status(self.lblMarkerStatus, marker_status)
         self.switch_lsl_status(self.lblEEGStatus, eeg_status)
 
         self.pbStart.setEnabled(marker_status & eeg_status)
         self.pbStop.setEnabled(marker_status & eeg_status)
-
-        if not (marker_status & eeg_status) and not self.stopping and self.collect_worker.running:
-            self.stop()
-
-        self.pbStart.setEnabled((not self.collect_worker.running) & marker_status & eeg_status
-                                & (not self.collect_worker.terminated))
-        self.sbChannelID.setEnabled((not self.collect_worker.running) & (not self.collect_worker.terminated) & (not self.cbAllChannels.isChecked()))
-        self.cbAllChannels.setEnabled((not self.collect_worker.running) & (not self.collect_worker.terminated))
-        self.pbStop.setEnabled(self.collect_worker.running)
-
         if self.time_out > 0:
             self.time_out = self.time_out - 1
             self.statusBar.showMessage('Waiting for a marker (time_out = ' + str(self.time_out) + ') ..')
 
-        if self.collect_worker.terminated:
-            self.statusBar.showMessage('Stopped. To run again, please restart the application.')
+        if self.controller is not None:
+            if not (marker_status & eeg_status) and not self.stopping and self.controller.running:
+                self.stop()
+
+            self.pbStart.setEnabled((not self.controller.running) & marker_status & eeg_status)
+                                    # & (not self.controller.terminated))
+            self.sbChannelID.setEnabled((not self.controller.running) & (not self.cbAllChannels.isChecked()))
+            self.cbAllChannels.setEnabled((not self.controller.running))
+            self.pbStop.setEnabled(self.controller.running)
+
+            if self.controller.terminated:
+                self.statusBar.showMessage('Stopped. To run again, please click on the start button.')
 
     # Switches the button between the ON/OFF states
     def switch_lsl_status(self, lbl_status, is_on):
@@ -139,9 +144,10 @@ class PlotWindow(QtWidgets.QMainWindow):
 
     # Start collecting and evaluating data
     def run(self):
-        self.collect_worker.eeg_processor.channel_id = self.sbChannelID.value()
-        self.collect_worker.eeg_processor.all_channels = self.cbAllChannels.isChecked()
-        self.collect_worker.start()
+        self.setup()
+        self.controller.eeg_processor.channel_id = self.sbChannelID.value()
+        self.controller.eeg_processor.all_channels = self.cbAllChannels.isChecked()
+        self.controller.start()
         self.teStatus.append('Running..')
 
     # Stop collecting and evaluating data
@@ -149,7 +155,9 @@ class PlotWindow(QtWidgets.QMainWindow):
     # needs to wait for the time_out
     def stop(self):
         self.stopping = True
-        self.collect_worker.stop()
+
+        if self.controller is not None:
+            self.controller.stop()
         self.teStatus.append('Stopping, please wait..')
 
     # Close the window and entire application

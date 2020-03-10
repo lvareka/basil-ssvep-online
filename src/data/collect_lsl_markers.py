@@ -20,8 +20,9 @@ class CollectLslMarkers(QThread):
     set_feedback_status = pyqtSignal(bool)
 
     # connects to data source and processor
-    def __init__(self, lsl_eeg, eeg_processor):
+    def __init__(self, controller, lsl_eeg, eeg_processor):
         super(CollectLslMarkers, self).__init__()
+        self.controller = controller
         self.lsl_eeg_collector = lsl_eeg
         self.eeg_processor = eeg_processor
 
@@ -38,7 +39,8 @@ class CollectLslMarkers(QThread):
             self.send_timeout_signal.emit(0)
 
             if marker is None:
-                self.terminate()
+                self.controller.stop()
+
                 self.add_status_signal.emit('Timeout passed with no marker received. Stopping the execution.')
 
             if marker == ['S  1']:  # start -> collect EEG samples
