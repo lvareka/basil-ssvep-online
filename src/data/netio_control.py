@@ -10,8 +10,8 @@ class Netio (threading.Thread):
 	def __init__(self): #, name, counter):
 		threading.Thread.__init__(self)
 		# self.threadID = threadID
-		self.ip = '192.168.20.109'
-		self.plugToToggle = 0
+		self.ip = '192.168.2.78'
+		self.plugToToggle = 1
 		#self.name = name
 		#self.counter = counter
 		self.menu = {
@@ -66,17 +66,18 @@ class Netio (threading.Thread):
 		'''
 		self.ip = ip
 
-	def execute(self,exc):
+	def execute(self, plugToToggle):
 		'''
 		To toggle the sockets. Usage: Netio.execute(["Netio", x]) with the socket x in [1,..,4].
 		The Netio String is just stuff needed for the menu. Not relevant for the communication with the plug.
 		'''
-		plugToToggle = exc[1]
+		#plugToToggle = 1
+		# plugToToggle = exc[1]
 		print("NetioExecute Toggle: " + str(plugToToggle))
 		toggleOrder = { "Outputs": [{ "ID":plugToToggle, "Action": 4  }] } #Action: 0 – off, 1 – on, 2 – short off, 3 – short on, 4 – toggle, 5 – no change, (6 – ignore)
 		toggleOrderJson = json.dumps(toggleOrder)
 		username = "write"
-		password = "write"
+		password = "basil-2020"
 		string = username + ":" + password
 		writeAutorization = "Basic " + str(base64.b64encode(string.encode("utf-8")), "utf-8")
 		headers = {'Authorization' : writeAutorization}
