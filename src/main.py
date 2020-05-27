@@ -6,7 +6,7 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import src.processing.controller as controller
 import src.data.config as config
 from functools import partial
-
+import src.data.netio_control as netio_control
 
 # Main GUI for BASIL SSVEP
 # Lukas Vareka, 2020
@@ -18,6 +18,7 @@ class PlotWindow(QtWidgets.QMainWindow):
         uic.loadUi('gui/window.ui', self)
         self.show()
         self.setFixedSize(self.size())
+        self.netio = netio_control.Netio()
         self.predicted_class = None
         self.result = None
         self.freqs = None
@@ -57,6 +58,9 @@ class PlotWindow(QtWidgets.QMainWindow):
         self.freqs = freqs
         self.amplitudes = amplitudes
         self.confidence = confidence
+
+        # smart toggle
+        self.netio.execute(predicted_class)
         self.status_output()
         self.display_fig()
 

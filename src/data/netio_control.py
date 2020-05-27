@@ -57,9 +57,6 @@ class Netio (threading.Thread):
 			}
 		}
 
-	def run(self):
-		print("RUN"+str(self.plugToToggle))
-
 	def setIp(self, ip):
 		'''
 		to correct the ip. If the plug hasnt the 192.168.20.109 address.
