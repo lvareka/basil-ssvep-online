@@ -6,7 +6,7 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import src.processing.controller as controller
 import src.data.config as config
 from functools import partial
-import src.data.netio_control as netio_control
+
 
 # Main GUI for BASIL SSVEP
 # Lukas Vareka, 2020
@@ -18,16 +18,9 @@ class PlotWindow(QtWidgets.QMainWindow):
         uic.loadUi('gui/window.ui', self)
         self.show()
         self.setFixedSize(self.size())
-        self.netio = netio_control.Netio()
-        self.predicted_class = None
-        self.result = None
-        self.freqs = None
-        self.amplitudes = None
-        self.confidence = 0
         self.pbStart.pressed.connect(self.run)
         self.pbStop.pressed.connect(self.stop)
-        self.pbTrue.pressed.connect(partial(self.teStatus.append,  'Correctly detected'))
-        self.pbFalse.pressed.connect(partial(self.teStatus.append, 'Incorrectly detected'))
+
         self.statusBar = QStatusBar()
         self.setStatusBar(self.statusBar)
         self.controller = None
@@ -40,51 +33,42 @@ class PlotWindow(QtWidgets.QMainWindow):
         self.lblImage.setPixmap(QtGui.QPixmap('../figures/unknown.jpg'))
         self.lblImage.show()
 
+    # Loads names of the objects from
+    # config files to customize feedback button
+    # labels
+    def init_feedback_buttons(self):
+        self.pbFeedback1.setText(config.names[0])
+        self.pbFeedback2.setText(config.names[1])
+        self.pbFeedback3.setText(config.names[2])
+        self.pbFeedback1.pressed.connect(partial(self.controller.set_correct_class, self.pbFeedback1.text()))
+        self.pbFeedback2.pressed.connect(partial(self.controller.set_correct_class, self.pbFeedback2.text()))
+        self.pbFeedback3.pressed.connect(partial(self.controller.set_correct_class, self.pbFeedback3.text()))
+
     def setup(self):
-        self.controller = controller.Controller()
-
-        self.controller.eeg_processor.set_results_signal.connect(self.set_results)
-        self.controller.eeg_processor.add_status_signal.connect(self.teStatus.append)
-
-        self.controller.marker_collector.add_status_signal.connect(self.statusBar.showMessage)
-        self.controller.marker_collector.send_timeout_signal.connect(self.set_timeout_value)
-        self.controller.marker_collector.set_feedback_status.connect(self.pbTrue.setEnabled)
-        self.controller.marker_collector.set_feedback_status.connect(self.pbFalse.setEnabled)
-
-    # Received results from signal processor -> update the state
-    def set_results(self, predicted_class, result, freqs, amplitudes, confidence):
-        self.predicted_class = predicted_class
-        self.result = result
-        self.freqs = freqs
-        self.amplitudes = amplitudes
-        self.confidence = confidence
-
-        # smart toggle
-        self.netio.execute(predicted_class)
-        self.status_output()
-        self.display_fig()
+        self.controller = controller.Controller(self)
+        self.init_feedback_buttons()
 
     def set_timeout_value(self, timeout):
         self.time_out = timeout
 
     # Print status (typically classification results)
-    def status_output(self):
+    def status_output(self, result, predicted_class, confidence):
         # Print the predicted class label
-        self.teStatus.append('Classification result: ' + str(self.result))
-        self.teStatus.append('Predicted class name: ' + str(config.names[self.predicted_class - 1]))
+        self.teStatus.append('Classification result: ' + str(result))
+        self.teStatus.append('Predicted class name: ' + str(config.names[predicted_class - 1]))
 
         # Clearly different values in results array?
-        self.result.sort()
-        confidence2 = 100 * (self.result[2] - self.result[1])
+        result.sort()
+        confidence2 = 100 * (result[2] - result[1])
 
         # Average different confidence values
-        self.pbConfidence.setValue((confidence2 + self.confidence * 100) / 2.0)
+        self.pbConfidence.setValue((confidence2 + confidence * 100) / 2.0)
 
     # Display figure (corresponding to the action taken)
     # and spectral plot
-    def display_fig(self):
+    def display_fig(self, predicted_class, freqs, amplitudes):
         # Display image
-        img_name = '../figures/' + config.names[self.predicted_class - 1] + '.png'
+        img_name = '../figures/' + config.names[predicted_class - 1] + '.png'
 
         self.lblImage.setPixmap(QtGui.QPixmap(img_name))
         self.lblImage.show()
@@ -96,14 +80,14 @@ class PlotWindow(QtWidgets.QMainWindow):
         axes.set_title("SSVEP channel spectra")
         axes.set_xlabel('Frequencies [Hz]')
         axes.set_ylabel('Amplitudes')
-        subset_fq = (self.freqs > 2) & (self.freqs <= 25)
+        subset_fq = (freqs > 2) & (freqs <= 25)
         axes.autoscale(True)
-        axes.plot(self.freqs[subset_fq], self.amplitudes[subset_fq])
+        axes.plot(freqs[subset_fq], amplitudes[subset_fq])
 
         # Show vertical lines corresponding to frequencies
         for i in range(0, len(config.frequencies)):
             axes.axvline(x=config.frequencies[i], color='r', alpha=0.5)
-            axes.text(config.frequencies[i], max(self.amplitudes[subset_fq]) * 0.75, config.names[i], rotation=90,
+            axes.text(config.frequencies[i], max(amplitudes[subset_fq]) * 0.75, config.names[i], rotation=90,
                       color='r', verticalalignment='bottom')
 
         canvas = FigureCanvas(figure)
@@ -168,6 +152,7 @@ class PlotWindow(QtWidgets.QMainWindow):
     def close(self):
         print('Closing the application..')
         self.stop()
+        self.controller.f.close()
         sys.exit(0)
 
 

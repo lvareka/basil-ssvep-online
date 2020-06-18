@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1085</width>
-    <height>840</height>
+    <width>1118</width>
+    <height>849</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -320,36 +320,32 @@
    <widget class="QGroupBox" name="gbFeedback">
     <property name="geometry">
      <rect>
-      <x>860</x>
+      <x>810</x>
       <y>730</y>
-      <width>191</width>
+      <width>261</width>
       <height>61</height>
      </rect>
     </property>
     <property name="title">
      <string>Optional feedback</string>
     </property>
-    <widget class="QPushButton" name="pbTrue">
+    <widget class="QPushButton" name="pbFeedback1">
      <property name="enabled">
       <bool>false</bool>
      </property>
      <property name="geometry">
       <rect>
-       <x>10</x>
+       <x>20</x>
        <y>20</y>
-       <width>75</width>
+       <width>71</width>
        <height>31</height>
       </rect>
      </property>
      <property name="text">
-      <string>True</string>
-     </property>
-     <property name="icon">
-      <iconset>
-       <normaloff>correct.png</normaloff>correct.png</iconset>
+      <string>?</string>
      </property>
     </widget>
-    <widget class="QPushButton" name="pbFalse">
+    <widget class="QPushButton" name="pbFeedback2">
      <property name="enabled">
       <bool>false</bool>
      </property>
@@ -357,16 +353,28 @@
       <rect>
        <x>100</x>
        <y>20</y>
-       <width>75</width>
+       <width>71</width>
        <height>31</height>
       </rect>
      </property>
      <property name="text">
-      <string>False</string>
+      <string>?</string>
      </property>
-     <property name="icon">
-      <iconset>
-       <normaloff>wrong.png</normaloff>wrong.png</iconset>
+    </widget>
+    <widget class="QPushButton" name="pbFeedback3">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>180</x>
+       <y>20</y>
+       <width>71</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>?</string>
      </property>
     </widget>
    </widget>
@@ -376,7 +384,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1085</width>
+     <width>1118</width>
      <height>21</height>
     </rect>
    </property>

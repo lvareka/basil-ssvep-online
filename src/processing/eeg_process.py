@@ -11,7 +11,7 @@ import src.data.config as config
 # Lukas Vareka, 2020
 class EEGProcessor(QtCore.QObject):
     set_results_signal = pyqtSignal(object, object, object, object, object)
-    add_status_signal  = pyqtSignal(str)
+    set_partial_results = pyqtSignal(str, object)
     channel_id = 0
     all_channels = True
     all_spectral_result = []
@@ -90,7 +90,7 @@ class EEGProcessor(QtCore.QObject):
                 energy[i] = energy[i] / baseline[i]
         if max(energy) != 0:
             energy = energy / max(energy)
-        # self.add_status_signal.emit('Spectral energy diff: ' + str(energy))
+        # self.set_partial_results.emit('Spectral energy diff: ' + str(energy))
 
         self.predicted_classes.append(np.argmax(energy) + 1)
         self.predicted_classes_weights.append(config.weights_classifier['spectral_diff'])
@@ -111,7 +111,7 @@ class EEGProcessor(QtCore.QObject):
         freq = np.array([freq1, freq2, freq3])
         # Compute CCA
         cca_result = self.find_corr(n_components, eeg_data, freq)
-        self.add_status_signal.emit('CCA results: ' + str(cca_result))
+        self.set_partial_results.emit('CCA results', cca_result)
 
         self.predicted_classes.append(np.argmax(cca_result) + 1)
         self.predicted_classes_weights.append(config.weights_classifier['cca'])
@@ -145,8 +145,8 @@ class EEGProcessor(QtCore.QObject):
         self.s_rate = s_rate
         # print('EEG data: ', eeg_data)
         eeg_shape = np.shape(eeg_data)
-        self.add_status_signal.emit('\nReceived new EEG data package: size: ' + str(eeg_shape))
-        self.add_status_signal.emit('Sampling rate: ' + str(s_rate))
+        # self.set_partial_results.emit('\nReceived new EEG data package: size: ' + str(eeg_shape))
+        # self.set_partial_results.emit('Sampling rate: ' + str(s_rate))
 
         if s_rate == 0:
             return
@@ -179,8 +179,8 @@ class EEGProcessor(QtCore.QObject):
             freq_s, ps = self.calc_psd(eeg_data[self.channel_id])
             spectral_result, spectral_diff_result = self.evaluate_all_spectral(freq_s, ps)
 
-        self.add_status_signal.emit('Spectral energy: ' + str(spectral_result))
-        self.add_status_signal.emit('Spectral energy diff: ' + str(spectral_diff_result))
+        self.set_partial_results.emit('Spectral energy', spectral_result)
+        self.set_partial_results.emit('Spectral energy diff', spectral_diff_result)
 
         # use CCA to estimate correlations
         cca_result = self.evaluate_corr(eeg_data)
